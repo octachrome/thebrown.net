@@ -1,0 +1,16 @@
+[Unit]
+Description=Screen Timer (Go)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/{{ screen_timer_user }}/screen-timer
+User={{ screen_timer_user }}
+Restart=always
+RestartSec=10
+# Optional environment variables
+# Environment="PORT=8080"
+# Environment="LOG_LEVEL=info"
+
+[Install]
+WantedBy=multi-user.target

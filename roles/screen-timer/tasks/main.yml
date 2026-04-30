@@ -1,0 +1,47 @@
+---
+- name: Create screen_timer user
+  user:
+    name: "{{ screen_timer_user }}"
+    home: "/home/{{ screen_timer_user }}"
+    shell: /bin/bash
+    state: present
+
+- name: Create screen_timer home directory
+  file:
+    path: "/home/{{ screen_timer_user }}"
+    state: directory
+    owner: "{{ screen_timer_user }}"
+    group: "{{ screen_timer_user }}"
+    mode: '0755'
+
+- name: Copy screen-timer binary
+  copy:
+    src: screen-timer
+    dest: "/home/{{ screen_timer_user }}/screen-timer"
+    owner: "{{ screen_timer_user }}"
+    group: "{{ screen_timer_user }}"
+    mode: '0755'
+  notify: restart screen-timer
+
+- name: Create systemd service unit
+  template:
+    src: screen-timer.service.j2
+    dest: /etc/systemd/system/screen-timer.service
+    mode: '0644'
+  notify: reload systemd
+
+- name: Flush handlers to reload systemd
+  meta: flush_handlers
+
+- name: Start and enable screen-timer service
+  systemd:
+    name: screen-timer
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Verify screen-timer service is running
+  command: systemctl is-active screen-timer
+  register: screen_timer_status
+  changed_when: false
+  failed_when: screen_timer_status.rc != 0
